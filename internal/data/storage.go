@@ -415,7 +415,7 @@ func (r *PostgresStorage) Delete(ctx context.Context, id interface{}) error {
 	if ok {
 		db = tx
 	}
-	statement, err := db.PrepareNamed(fmt.Sprintf(`UPDATE "%s" SET "deletedAt" = :deletedAt WHERE "id" = :id RETURNING %s
+	statement, err := db.PrepareNamed(fmt.Sprintf(`UPDATE "%s" SET "deleted_at" = :deletedAt WHERE "id" = :id RETURNING %s
 	`, r.tableName, r.selectFields))
 	if err != nil {
 		return err

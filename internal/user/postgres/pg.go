@@ -18,7 +18,7 @@ type PostgresStorage struct {
 func (s *PostgresStorage) FindAll(ctx context.Context, params *user.FindAllUsersParams) ([]*user.User, *types.Error) {
 
 	users := []*user.User{}
-	where := `"deletedAt" IS NULL`
+	where := `"deleted_at" IS NULL`
 
 	if params.UserID != 0 {
 		where += ` AND "id" = :userId`
@@ -33,8 +33,9 @@ func (s *PostgresStorage) FindAll(ctx context.Context, params *user.FindAllUsers
 		where += ` AND "name" ILIKE :search`
 	}
 	if params.Token != "" {
-		where += ` AND "merchantToken" ILIKE :token`
+		where += ` AND "token" ILIKE :token`
 	}
+
 	if params.Page != 0 && params.Limit != 0 {
 		where = fmt.Sprintf(`%s ORDER BY "id" DESC LIMIT :limit OFFSET :offset`, where)
 	} else {

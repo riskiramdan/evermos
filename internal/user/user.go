@@ -29,10 +29,10 @@ type User struct {
 	Name           string     `json:"name" db:"name"`
 	Email          string     `json:"email" db:"email"`
 	Password       string     `json:"password" db:"password"`
-	Token          *string    `json:"token" db:"merchantToken"`
+	Token          *string    `json:"token" db:"token"`
 	TokenExpiredAt *time.Time `json:"tokenExpiredAt" db:"tokenExpiredAt"`
-	CreatedAt      time.Time  `json:"createdAt" db:"createdAt"`
-	UpdatedAt      *time.Time `json:"updatedAt" db:"updatedAt"`
+	CreatedAt      time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt      *time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 //FindAllUsersParams params for find all

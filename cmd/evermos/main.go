@@ -10,6 +10,8 @@ import (
 	"github.com/riskiramdan/evermos/databases"
 	"github.com/riskiramdan/evermos/internal/data"
 	internalhttp "github.com/riskiramdan/evermos/internal/http"
+	"github.com/riskiramdan/evermos/internal/product"
+	productPg "github.com/riskiramdan/evermos/internal/product/postgres"
 	"github.com/riskiramdan/evermos/internal/user"
 	userPg "github.com/riskiramdan/evermos/internal/user/postgres"
 )
@@ -17,7 +19,8 @@ import (
 // InternalServices represents all the internal domain services
 // that will be used by payfazz-commerce httpserver
 type InternalServices struct {
-	userService user.ServiceInterface
+	userService    user.ServiceInterface
+	productService product.ServiceInterface
 }
 
 func buildInternalServices(db *sqlx.DB, config *config.Config) *InternalServices {
@@ -25,8 +28,13 @@ func buildInternalServices(db *sqlx.DB, config *config.Config) *InternalServices
 		data.NewPostgresStorage(db, "user", user.User{}),
 	)
 	userService := user.NewService(userPostgresStorage)
+	productPostgresStorage := productPg.NewPostgresStorage(
+		data.NewPostgresStorage(db, "product", product.Product{}),
+	)
+	productService := product.NewService(productPostgresStorage)
 	return &InternalServices{
-		userService: userService,
+		userService:    userService,
+		productService: productService,
 	}
 }
 
@@ -54,6 +62,7 @@ func main() {
 
 	s := internalhttp.NewServer(
 		internalServices.userService,
+		internalServices.productService,
 		dataManager,
 		config,
 	)

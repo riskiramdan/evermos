@@ -11,25 +11,25 @@ func init() {
 
 	// define files
 	file2 := &embedded.EmbeddedFile{
-		Filename:    "201911022211_create_table_user.down.sql",
-		FileModTime: time.Unix(1612073386, 0),
+		Filename:    "202101312211_create_table_user.down.sql",
+		FileModTime: time.Unix(1612077118, 0),
 
-		Content: string("drop table \"user\";"),
+		Content: string("drop table if exists \"user\";\ndrop table if exists \"product\";\ndrop table if exists \"order_history\";"),
 	}
 	file3 := &embedded.EmbeddedFile{
-		Filename:    "201911022211_create_table_user.up.sql",
-		FileModTime: time.Unix(1612073386, 0),
+		Filename:    "202101312211_create_table_user.up.sql",
+		FileModTime: time.Unix(1612078326, 0),
 
-		Content: string("-- Table Definition ----------------------------------------------\n\ncreate table public.\"user\"\n(\n\t\"id\" serial not null,\n\t\"name\" varchar(100) not null,\n\t\"email\" varchar(100) not null,\n\t\"password\" varchar(255) not null,\n\t\"merchantToken\" varchar(255) null,\n\t\"tokenExpiredAt\" timestamptz null,\n\t\"createdAt\" timestamptz NOT NULL,\n\t\"updatedAt\" timestamptz NOT NULL,\n\t\"deletedAt\" timestamptz,\n\tconstraint user_pkey primary key (\"id\")\n);"),
+		Content: string("-- Table Definition ----------------------------------------------\n\nCREATE TABLE \"user\" (\n  \"id\" SERIAL PRIMARY KEY NOT NULL,\n  \"name\" varchar(80) NOT NULL,\n  \"email\" varchar(80) NOT NULL,\n  \"password\" varchar NOT NULL,\n  \"token\" varchar null,\n  \"tokenExpiredAt\" timestamptz null,\n  \"created_at\" timestamptz NOT NULL DEFAULT (now()),\n  \"created_by\" varchar(20) DEFAULT 'admin',\n  \"updated_at\" timestamptz NOT NULL DEFAULT (now()),\n  \"updated_by\" varchar(20) DEFAULT 'admin',\n  \"deleted_at\" timestamptz NULL,\n  \"deleted_by\" varchar(20) NULL\n);\n\nCREATE TABLE \"product\" (\n  \"id\" SERIAL PRIMARY KEY NOT NULL,\n  \"name\" varchar(80) NOT NULL,\n  \"qty\" int NOT NULL,\n  \"price\" int NOT NULL,\n  \"created_at\" timestamptz NOT NULL DEFAULT (now()),\n  \"created_by\" varchar(20) DEFAULT 'admin',\n  \"updated_at\" timestamptz NOT NULL DEFAULT (now()),\n  \"updated_by\" varchar(20) DEFAULT 'admin',\n  \"deleted_at\" timestamptz NULL,\n  \"deleted_by\" varchar(20) NULL\n);\n\nCREATE TABLE \"order_history\" (\n  \"id\" SERIAL PRIMARY KEY NOT NULL,\n  \"user_id\" int,\n  \"product_id\" int NOT NULL,\n  \"qty\" int NOT NULL,\n  \"price\" int NOT NULL,\n  \"created_at\" timestamptz NOT NULL DEFAULT (now()),\n  \"created_by\" varchar(20) DEFAULT 'admin',\n  \"updated_at\" timestamptz NOT NULL DEFAULT (now()),\n  \"updated_by\" varchar(20) DEFAULT 'admin',\n  \"deleted_at\" timestamptz NULL,\n  \"deleted_by\" varchar(20) NULL\n);\n\nALTER TABLE \"order_history\" ADD FOREIGN KEY (\"user_id\") REFERENCES \"user\" (\"id\");"),
 	}
 
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1612073916, 0),
+		DirModTime: time.Unix(1612074654, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file2, // "201911022211_create_table_user.down.sql"
-			file3, // "201911022211_create_table_user.up.sql"
+			file2, // "202101312211_create_table_user.down.sql"
+			file3, // "202101312211_create_table_user.up.sql"
 
 		},
 	}
@@ -40,13 +40,13 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`./migrations`, &embedded.EmbeddedBox{
 		Name: `./migrations`,
-		Time: time.Unix(1612073916, 0),
+		Time: time.Unix(1612074654, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
 		Files: map[string]*embedded.EmbeddedFile{
-			"201911022211_create_table_user.down.sql": file2,
-			"201911022211_create_table_user.up.sql":   file3,
+			"202101312211_create_table_user.down.sql": file2,
+			"202101312211_create_table_user.up.sql":   file3,
 		},
 	})
 }

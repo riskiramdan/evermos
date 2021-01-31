@@ -1,33 +1,3 @@
-// Package http shopfazz API.
-//
-// The purpose of this API is to provide the shopfazz services
-// throught the web API
-//
-// Terms Of Service:
-//
-// Currently, it is just for Payfazz Developers.
-//
-//     Schemes: https
-//     Host: 10.0.123.70
-//     BasePath: /
-//     Version: 0.0.1
-//     License: Private
-//
-//
-//     components:
-//       securitySchemes:
-//         bearerAuth:
-//           type: http
-//           scheme: bearer
-//           bearerFormat: JWT
-//
-//       SecurityDefinitions:
-//         PublicKeyAuth:
-//           type: apiKey
-//           in: header
-//           name: Authorization
-//
-// swagger:meta
 package http
 
 import (
@@ -43,15 +13,18 @@ import (
 	"github.com/riskiramdan/evermos/config"
 	"github.com/riskiramdan/evermos/internal/data"
 	"github.com/riskiramdan/evermos/internal/http/controller"
+	"github.com/riskiramdan/evermos/internal/product"
 	"github.com/riskiramdan/evermos/internal/user"
 	"github.com/rs/cors"
 )
 
 // Server represents the http server that handles the requests
 type Server struct {
-	dataManager    *data.Manager
-	userService    user.ServiceInterface
-	userController *controller.UserController
+	dataManager       *data.Manager
+	userService       user.ServiceInterface
+	userController    *controller.UserController
+	productService    product.ServiceInterface
+	productController *controller.ProductController
 }
 
 func (hs *Server) authMethod(r chi.Router, method string, path string, handler http.HandlerFunc) {
@@ -109,6 +82,12 @@ func (hs *Server) compileRouter() chi.Router {
 		hs.authMethod(r, "PUT", "/users/{userId}", hs.userController.UpdateUser)
 		hs.authMethod(r, "GET", "/users", hs.userController.ListUser)
 		hs.authMethod(r, "POST", "/users", hs.userController.CreateUser)
+
+		// hs.authMethod(r, "PUT", "/users/{userId}", hs.productController.)
+		hs.authMethod(r, "GET", "/products", hs.productController.ListProduct)
+		hs.authMethod(r, "POST", "/product", hs.productController.CreateProduct)
+		hs.authMethod(r, "PUT", "/product/{id}", hs.productController.UpdateProduct)
+		hs.authMethod(r, "DELETE", "/product/{id}", hs.productController.DeleteProduct)
 	})
 
 	return r
@@ -150,13 +129,17 @@ func (hs *Server) Serve() {
 // NewServer creates a new http server
 func NewServer(
 	userService user.ServiceInterface,
+	productService product.ServiceInterface,
 	dataManager *data.Manager,
 	config *config.Config,
 ) *Server {
 	userController := controller.NewUserController(userService, dataManager)
+	productController := controller.NewProductController(productService, dataManager)
 	return &Server{
-		dataManager:    dataManager,
-		userService:    userService,
-		userController: userController,
+		dataManager:       dataManager,
+		userService:       userService,
+		userController:    userController,
+		productService:    productService,
+		productController: productController,
 	}
 }
