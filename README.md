@@ -33,4 +33,5 @@ for more information please visit : https://github.com/tsenart/vegeta
 
 ## vegeta attack -header="Authorization: Bearer 7869a9d96cfbfb0e2ee6591ecc270ad93c47e68afa50734f273607bc53f4ce57" -rate=10 -duration=5s -targets=targets.txt | vegeta report 
 
-*Bearer Token can be get from login REST API
+* Bearer Token can be get from login REST API
+* Before Running the application please update database connection string under config/config.go

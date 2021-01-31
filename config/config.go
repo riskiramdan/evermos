@@ -9,10 +9,6 @@ const (
 	redisAddr          = "REDIS_ADDR"
 	redisPassword      = "REDIS_PASSWORD"
 	redisDB            = "REDIS_DB"
-	imagePath          = "IMGPATH"
-	accountKey         = "CLOUDINARY_ACCOUNT_KEY"
-	secretKey          = "CLOUDINARY_SECRET_KEY"
-	cloudName          = "CLOUDINARY_CLOUD_KEY"
 )
 
 // Config contains application configuration
