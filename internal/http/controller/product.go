@@ -14,7 +14,6 @@ import (
 )
 
 // ProductController represents the product controller
-// swagger:ignore
 type ProductController struct {
 	productService product.ServiceInterface
 	dataManager    *data.Manager
@@ -26,6 +25,7 @@ type ProductList struct {
 	Count int                `json:"count"`
 }
 
+// ListProduct Function for listing data product
 func (a *ProductController) ListProduct(w http.ResponseWriter, r *http.Request) {
 	var err *types.Error
 
@@ -91,6 +91,7 @@ func (a *ProductController) ListProduct(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
+// CreateProduct Function for Create data product
 func (a *ProductController) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	var err *types.Error
 
@@ -129,6 +130,7 @@ func (a *ProductController) CreateProduct(w http.ResponseWriter, r *http.Request
 	response.JSON(w, http.StatusOK, "Product Created Successfully")
 }
 
+// UpdateProduct Function for update data product
 func (a *ProductController) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	var err *types.Error
 
@@ -180,6 +182,7 @@ func (a *ProductController) UpdateProduct(w http.ResponseWriter, r *http.Request
 
 }
 
+// DeleteProduct Function for delete data product
 func (a *ProductController) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	var err *types.Error
 	var sProductID = chi.URLParam(r, "id")
@@ -203,11 +206,46 @@ func (a *ProductController) DeleteProduct(w http.ResponseWriter, r *http.Request
 		return nil
 	})
 	if errTransaction != nil {
-		err.Path = ".USerController->DeleteProduct()" + err.Path
+		err.Path = ".ProductController->DeleteProduct()" + err.Path
 		response.Error(w, "Internal Server Error", http.StatusInternalServerError, *err)
 		return
 	}
 	response.JSON(w, http.StatusNoContent, "")
+}
+
+// CreateOrder Function for delete data order
+func (a *ProductController) CreateOrder(w http.ResponseWriter, r *http.Request) {
+	var err *types.Error
+
+	decoder := json.NewDecoder(r.Body)
+
+	var params *product.TransactionOrderHistorytParams
+	errDecode := decoder.Decode(&params)
+	if errDecode != nil {
+		err = &types.Error{
+			Path:    ".ProductController->CreateOrder()",
+			Message: errDecode.Error(),
+			Error:   errDecode,
+			Type:    "golang-error",
+		}
+		response.Error(w, "Bad Request", http.StatusBadRequest, *err)
+		return
+	}
+
+	errTransaction := a.dataManager.RunInTransaction(r.Context(), func(ctx context.Context) error {
+		_, err = a.productService.CreateOrder(ctx, params)
+		if err != nil {
+			return err.Error
+		}
+		return nil
+	})
+	if errTransaction != nil {
+		err.Path = ".ProductController->CreateOrder()" + err.Path
+		response.Error(w, "Internal Server Error", http.StatusInternalServerError, *err)
+		return
+	}
+
+	response.JSON(w, http.StatusOK, "Order Created Successfully")
 }
 
 // NewProductController creates a new product controller

@@ -88,6 +88,8 @@ func (hs *Server) compileRouter() chi.Router {
 		hs.authMethod(r, "POST", "/product", hs.productController.CreateProduct)
 		hs.authMethod(r, "PUT", "/product/{id}", hs.productController.UpdateProduct)
 		hs.authMethod(r, "DELETE", "/product/{id}", hs.productController.DeleteProduct)
+
+		hs.authMethod(r, "POST", "/order", hs.productController.CreateOrder)
 	})
 
 	return r

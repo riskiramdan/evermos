@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/riskiramdan/evermos/internal/appcontext"
 	"github.com/riskiramdan/evermos/internal/data"
 	"github.com/riskiramdan/evermos/internal/types"
 )
@@ -14,6 +15,7 @@ var (
 	// ErrWrongPassword      = errors.New("wrong password")
 	// ErrWrongEmail         = errors.New("wrong email")
 	ErrProductAlreadyExists = errors.New("Product Already Exists")
+	ErrProductUnavailable   = errors.New("Product Unavailable")
 
 // ErrNotFound           = errors.New("not found")
 // ErrNoInput            = errors.New("no input")
@@ -31,6 +33,17 @@ type Product struct {
 	UpdatedAt *time.Time `json:"updatedAt" db:"updated_at"`
 }
 
+// OrderHistory OrderHistory
+type OrderHistory struct {
+	ID        int        `json:"id" db:"id"`
+	UserID    int        `json:"userId" db:"user_id"`
+	ProductID int        `json:"productId" db:"product_id"`
+	Qty       int        `json:"qty" db:"qty"`
+	Price     int        `json:"price" db:"price"`
+	CreatedAt time.Time  `json:"createdAt" db:"created_at"`
+	UpdatedAt *time.Time `json:"updatedAt" db:"updated_at"`
+}
+
 //FindAllProductsParams params for find all
 type FindAllProductsParams struct {
 	Page      int    `json:"page"`
@@ -40,12 +53,26 @@ type FindAllProductsParams struct {
 	Name      string `json:"name"`
 }
 
+//FindAllOrderHistorysParams params for find all
+type FindAllOrderHistorysParams struct {
+	Page   int    `json:"page"`
+	Search string `json:"search"`
+	Limit  int    `json:"limit"`
+	ID     int    `json:"id"`
+}
+
 // TransactionProductParams represent the http request data for create product
-// swagger:model
 type TransactionProductParams struct {
 	Name  string `json:"name"`
 	Qty   int    `json:"qty"`
 	Price int    `json:"price"`
+}
+
+// TransactionOrderHistorytParams represent the http request data for create order history
+type TransactionOrderHistorytParams struct {
+	ProductID int `json:"productId"`
+	Qty       int `json:"qty"`
+	Price     int `json:"price"`
 }
 
 // Storage represents the product storage interface
@@ -57,6 +84,15 @@ type Storage interface {
 	Delete(ctx context.Context, productID int) *types.Error
 }
 
+// StorageOrderHistory represents the order History storage interface
+type StorageOrderHistory interface {
+	FindAllOrderHistory(ctx context.Context, params *FindAllOrderHistorysParams) ([]*OrderHistory, *types.Error)
+	FindOrderHistoryByID(ctx context.Context, orderHistoryID int) (*OrderHistory, *types.Error)
+	InsertOrderHistory(ctx context.Context, OrderHistory *OrderHistory) (*OrderHistory, *types.Error)
+	UpdateOrderHistory(ctx context.Context, OrderHistory *OrderHistory) (*OrderHistory, *types.Error)
+	DeleteOrderHistory(ctx context.Context, orderHistoryID int) *types.Error
+}
+
 // ServiceInterface represents the product service interface
 type ServiceInterface interface {
 	ListProducts(ctx context.Context, params *FindAllProductsParams) ([]*Product, int, *types.Error)
@@ -64,11 +100,13 @@ type ServiceInterface interface {
 	CreateProduct(ctx context.Context, params *TransactionProductParams) (*Product, *types.Error)
 	UpdateProduct(ctx context.Context, productID int, params *TransactionProductParams) (*Product, *types.Error)
 	DeleteProduct(ctx context.Context, productID int) *types.Error
+	CreateOrder(ctx context.Context, params *TransactionOrderHistorytParams) (*OrderHistory, *types.Error)
 }
 
 // Service is the domain logic implementation of product Service interface
 type Service struct {
 	productStorage Storage
+	orderStorage   StorageOrderHistory
 }
 
 // ListProducts is listing products
@@ -166,13 +204,8 @@ func (s *Service) UpdateProduct(ctx context.Context, productID int, params *Tran
 		product.Name = params.Name
 	}
 
-	if params.Qty != 0 {
-		product.Qty = params.Qty
-	}
-
-	if params.Price != 0 {
-		product.Price = params.Price
-	}
+	product.Qty = params.Qty
+	product.Price = params.Price
 
 	product, err = s.productStorage.Update(ctx, product)
 	if err != nil {
@@ -194,11 +227,62 @@ func (s *Service) DeleteProduct(ctx context.Context, productID int) *types.Error
 	return nil
 }
 
+// CreateOrder for create order
+func (s *Service) CreateOrder(ctx context.Context, params *TransactionOrderHistorytParams) (*OrderHistory, *types.Error) {
+	product, errType := s.GetProduct(ctx, params.ProductID)
+	if errType != nil {
+		errType.Path = ".ProductService->CreateOrder()" + errType.Path
+		return nil, errType
+	}
+	if product.Qty < params.Qty {
+		return nil, &types.Error{
+			Path:    ".ProductService->CreateOrder()",
+			Message: ErrProductUnavailable.Error(),
+			Error:   ErrProductUnavailable,
+			Type:    "validation-error",
+		}
+	}
+
+	product, errType = s.UpdateProduct(ctx, params.ProductID, &TransactionProductParams{
+		Qty: product.Qty - params.Qty,
+	})
+	if errType != nil {
+		errType.Path = ".ProductService->CreateOrder()" + errType.Path
+		return nil, errType
+	}
+
+	/*
+
+		Payment Logic Here
+
+	*/
+
+	now := time.Now()
+
+	orderHistory, errType := s.orderStorage.InsertOrderHistory(ctx, &OrderHistory{
+		ProductID: params.ProductID,
+		UserID:    appcontext.UserID(ctx),
+		Qty:       params.Qty,
+		Price:     params.Price,
+		CreatedAt: now,
+		UpdatedAt: &now,
+	})
+
+	if errType != nil {
+		errType.Path = ".ProductService->CreateProduct()" + errType.Path
+		return nil, errType
+	}
+
+	return orderHistory, nil
+}
+
 // NewService creates a new product AppService
 func NewService(
 	productStorage Storage,
+	orderStorage StorageOrderHistory,
 ) *Service {
 	return &Service{
 		productStorage: productStorage,
+		orderStorage:   orderStorage,
 	}
 }

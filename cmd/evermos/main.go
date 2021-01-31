@@ -28,10 +28,14 @@ func buildInternalServices(db *sqlx.DB, config *config.Config) *InternalServices
 		data.NewPostgresStorage(db, "user", user.User{}),
 	)
 	userService := user.NewService(userPostgresStorage)
+
 	productPostgresStorage := productPg.NewPostgresStorage(
 		data.NewPostgresStorage(db, "product", product.Product{}),
 	)
-	productService := product.NewService(productPostgresStorage)
+	orderHistoryPostgresStorage := productPg.NewPostgresStorage(
+		data.NewPostgresStorage(db, "order_history", product.OrderHistory{}),
+	)
+	productService := product.NewService(productPostgresStorage, orderHistoryPostgresStorage)
 	return &InternalServices{
 		userService:    userService,
 		productService: productService,
